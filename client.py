@@ -1,12 +1,8 @@
 import requests
 import rsa
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from rsa import PublicKey
 
-from utils import (
-    serialize_public_key,
-    encrypt,
-)
+from utils import serialize_public_key
 
 
 def get_server_public_key(server_url: str) -> PublicKey:
@@ -28,9 +24,10 @@ def send_encrypted_message(
 def send_encrypted_file(
     file_name: str, message: bytes, server_public_key: PublicKey, server_url: str
 ):
-    # encrypted_message = encrypt(message, server_public_key)
-    encrypted_message = rsa.encrypt(message, server_public_key)
-    requests.post(server_url, files={"file": (file_name, encrypted_message.hex())})
+    splited_message = [message[i : i + 100] for i in range(0, len(message), 100)]
+    for msg in splited_message:
+        encrypted_message = rsa.encrypt(msg, server_public_key)
+        requests.post(server_url, files={"file": (file_name, encrypted_message.hex())})
 
 
 if __name__ == "__main__":
