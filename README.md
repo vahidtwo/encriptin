@@ -2,7 +2,7 @@
 
 run server with 
 ```bash
-uvicorn server:app --reload 
+python server.py
 ```
 run client
 ```bash
