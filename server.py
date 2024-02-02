@@ -2,7 +2,11 @@ import rsa
 from fastapi import FastAPI, UploadFile
 from pydantic import BaseModel
 
-from utils import get_private_and_public_key, deserialize_public_key
+from utils import (
+    get_private_and_public_key,
+    deserialize_public_key,
+    get_bluefish_cipher,
+)
 
 app = FastAPI()
 
@@ -11,7 +15,7 @@ class EncryptedMessage(BaseModel):
     msg: str
 
 
-@app.post("/encrypt/file/")
+@app.post("/rsa/encrypt/file/")
 async def create_file(file: UploadFile):
     file_data, file_name = file.file.read(), file.filename
     print(f"{file_name} : {file_data}")
@@ -19,11 +23,11 @@ async def create_file(file: UploadFile):
 
     message = rsa.decrypt(file_data, private_key)
     print(message)
-    with open(f"encripted_{file_name}", "wab+") as f:
+    with open(f"encripted_{file_name}", "ab+") as f:
         f.write(message)
 
 
-@app.post("/encrypt/message/")
+@app.post("/rsa/encrypt/message/")
 async def encrypted_message(encrypted_message: EncryptedMessage):
     encrypted_message_bytes = bytes.fromhex(encrypted_message.msg)
     print(encrypted_message_bytes)
@@ -32,8 +36,32 @@ async def encrypted_message(encrypted_message: EncryptedMessage):
     print(message)
 
 
-@app.get("/public-key/")
-async def get_public_key():
+@app.post("/blue-fish/encrypt/file/")
+async def create_file(file: UploadFile):
+    cipher = get_bluefish_cipher()
+
+    file_data, file_name = file.file.read(), file.filename
+    print(f"{file_name} : {file_data}")
+    encrypted_message_bytes = bytes.fromhex(file_data.decode())
+
+    message = cipher.decrypt_ecb_cts(encrypted_message_bytes)
+    print(message)
+    with open(f"encripted_blue-fish_{file_name}", "ab+") as f:
+        f.write(b"".join(message))
+
+
+@app.post("/blue-fish/encrypt/message/")
+async def encrypted_message(encrypted_message: EncryptedMessage):
+    cipher = get_bluefish_cipher()
+
+    encrypted_message_bytes = bytes.fromhex(encrypted_message.msg)
+    print(encrypted_message_bytes)
+    message = cipher.decrypt_ecb_cts(encrypted_message_bytes)
+    print(b"".join(message))
+
+
+@app.get("/rsa/public-key/")
+async def get_rsa_public_key():
     return {
         "public_key": deserialize_public_key(get_private_and_public_key("server")[1])
     }

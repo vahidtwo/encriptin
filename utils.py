@@ -1,6 +1,7 @@
 import os.path
 from pathlib import Path
 
+import blowfish
 import rsa
 from rsa import PublicKey, PrivateKey
 
@@ -35,3 +36,7 @@ def deserialize_public_key(public_key: PublicKey) -> bytes:
 
 def serialize_public_key(public_key: bytes) -> PublicKey:
     return rsa.PublicKey.load_pkcs1(public_key)
+
+
+def get_bluefish_cipher() -> blowfish.Cipher:
+    return blowfish.Cipher(b"My secret key")
